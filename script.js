@@ -51,7 +51,7 @@ function drawTile(x, y, id) {
 		var drawing = new Image();
 		drawing.src = id;
 		drawing.onload = function() { ctx.drawImage(drawing, x, y); }
-	}else ctx.drawImage(images[i], x, y);
+	}else ctx.drawImage(images[id], x, y);
 }
 
 function onClick(event) {
