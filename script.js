@@ -1,12 +1,14 @@
 var ctx;
 var canvas;
-var canvasSz = 1024;
+var tiles = 16;
 var tileSz = 32;
 var prob = 8;
-var tiles = canvasSz / tileSz;
+var canvasSz = tiles * tileSz;
 var open = new Array(tiles * tiles);
 var mine = new Array(tiles * tiles);
 var flag = new Array(tiles * tiles);
+
+var images = {};
 
 window.onload = function() {
 	resetTiles();
@@ -28,6 +30,8 @@ function resetTiles(){
 }
 
 function renderGrid(){
+	document.getElementById("mines").innerHTML = "<h1>"+count(flag)+"/"+count(mine)+"<h1>";
+	document.getElementById("solved").innerHTML = "<h1>"+((count(flag) == count(mine) && tiles*tiles-count(open) == count(flag))?"Solved! Unflag and click a mine to try again.":"Good Luck!")+"</h1>";
 	for (var i = 0; i < open.length; i++) {
 		var id = getImg(i);
 		var x = (i % tiles) * tileSz;
@@ -36,12 +40,18 @@ function renderGrid(){
 	}
 }
 
+function count(lst){
+	var sum = 0;
+	for(var i = 0; i < tiles*tiles; i++) sum+=lst[i];
+	return sum;
+}
+
 function drawTile(x, y, id) {
-	var drawing = new Image();
-	drawing.src = id;
-	drawing.onload = function() {
-		ctx.drawImage(drawing, x, y);
-	}
+	if(typeof images[id] === "undefined"){
+		var drawing = new Image();
+		drawing.src = id;
+		drawing.onload = function() { ctx.drawImage(drawing, x, y); }
+	}else ctx.drawImage(images[i], x, y);
 }
 
 function onClick(event) {
@@ -49,10 +59,8 @@ function onClick(event) {
     var x = event.clientX - rect.left;
     var y = event.clientY - rect.top;
 	var i = Math.floor(x / tileSz) + Math.floor(y / tileSz) * tiles;
-	if(event.button == 0)
-		flood(i);
-	else if(getImg(i) == "images/ue.png" || getImg(i) == "images/uf.png")
-		flag[i] = !flag[i];
+	if(event.button == 0) flood(i);
+	else if(getImg(i) == "images/ue.png" || getImg(i) == "images/uf.png") flag[i] = !flag[i];
 	renderGrid();
 }
 
@@ -61,24 +69,17 @@ function flood(i) {
 		open[i] = true;
 		if(getImg(i) == "images/o0.png") {
 			if(i % tiles != 0) {
-				if(i - tiles - 1 >= 0)
-					flood(i - tiles - 1);
-				if(i - 1 >= 0)
-					flood(i - 1);
-				if(i + tiles - 1 < mine.length)
-					flood(i + tiles - 1);
+				if(i - tiles - 1 >= 0) flood(i - tiles - 1);
+				if(i - 1 >= 0) flood(i - 1);
+				if(i + tiles - 1 < mine.length) flood(i + tiles - 1);
 			}
 			if(i % tiles != tiles - 1) {
-				if(i - tiles + 1 >= 0)
-					flood(i - tiles + 1);
+				if(i - tiles + 1 >= 0) flood(i - tiles + 1);
 				flood(i + 1);
-				if(i + tiles + 1 < mine.length)
-					flood(i + tiles + 1);
+				if(i + tiles + 1 < mine.length) flood(i + tiles + 1);
 			}
-			if(i + tiles < mine.length)
-				flood(i + tiles);
-			if(i - tiles >= 0)
-				flood(i - tiles);
+			if(i + tiles < mine.length) flood(i + tiles);
+			if(i - tiles >= 0) flood(i - tiles);
 		}
 		else if(getImg(i) == "images/om.png")
 		resetTiles();
@@ -86,39 +87,21 @@ function flood(i) {
 }
 
 function getImg(i, flood) {
-	if(flag[i])
-		return "images/uf.png";
-	if(!open[i])
-		return "images/ue.png";
-	if(mine[i])
-		return "images/om.png";
+	if(flag[i]) return "images/uf.png";
+	if(!open[i]) return "images/ue.png";
+	if(mine[i]) return "images/om.png";
 	var surround = 0;
 	if(i % tiles != 0) {
-		if(i - tiles - 1 >= 0)
-			if(mine[i - tiles - 1])
-				surround++;
-		if(i - 1 >= 0)
-			if(mine[i - 1])
-				surround++;
-		if(i + tiles - 1 < mine.length)
-			if(mine[i + tiles - 1])
-				surround++;
+		if(i - tiles - 1 >= 0 && mine[i - tiles - 1]) surround++;
+		if(i - 1 >= 0 && mine[i - 1]) surround++;
+		if(i + tiles - 1 < mine.length && mine[i + tiles - 1]) surround++;
 	}
 	if(i % tiles != tiles - 1) {
-		if(i - tiles + 1 >= 0)
-			if(mine[i - tiles + 1])
-				surround++;
-		if(mine[i + 1])
-			surround++;
-		if(i + tiles + 1 < mine.length)
-			if(mine[i + tiles + 1])
-				surround++;
+		if(i - tiles + 1 >= 0 && mine[i - tiles + 1]) surround++;
+		if(mine[i + 1]) surround++;
+		if(i + tiles + 1 < mine.length && mine[i + tiles + 1]) surround++;
 	}
-	if(i + tiles < mine.length)
-		if(mine[i + tiles])
-			surround++;
-	if(i - tiles >= 0)
-		if(mine[i - tiles])
-			surround++;
+	if(i + tiles < mine.length && mine[i + tiles]) surround++;
+	if(i - tiles >= 0 && mine[i - tiles]) surround++;
 	return "images/o" + surround + ".png";
 }
