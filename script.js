@@ -18,7 +18,7 @@ window.onload = function() {
     ctx = canvas.getContext("2d");
     ctx.canvas.width = canvasSz;
     ctx.canvas.height = canvasSz;
-	renderGrid();
+	setInterval(renderGrid,25);
 };
 
 function resetTiles(){
@@ -50,6 +50,7 @@ function drawTile(x, y, id) {
 	if(typeof images[id] === "undefined"){
 		var drawing = new Image();
 		drawing.src = id;
+		images[id] = drawing;
 		drawing.onload = function() { ctx.drawImage(drawing, x, y); }
 	}else ctx.drawImage(images[id], x, y);
 }
